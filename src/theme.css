@@ -1,0 +1,88 @@
+:root{
+  --primary:#2E7D32;     /* verde AgroLink */
+  --accent:#A5D6A7;      /* verde claro */
+  --neutral:#F5F7F9;     /* gris muy claro */
+  --ink:#1f2937;         /* texto principal */
+  --muted:#6b7280;       /* texto secundario */
+  --radius:16px;
+  --shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0; background:var(--neutral); color:var(--ink);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Layout utilidades */
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns: 1fr 1fr}
+.grid-3{grid-template-columns: repeat(3,1fr)}
+.card{
+  background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
+}
+.hero{background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px}
+
+/* Tipografía */
+h1{font-size:clamp(28px,2.2vw,36px); margin:0 0 8px}
+h2{font-size:24px; margin:0 0 12px}
+h3{font-size:18px; margin:0 0 10px}
+p{line-height:1.6; color:var(--ink)}
+
+/* Navegación */
+.nav{background:#fff; border-bottom:1px solid #e5e7eb}
+.nav.sticky{
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: saturate(180%) blur(4px);
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 4px 14px rgba(0,0,0,.06);
+}
+.nav .wrap{display:flex;align-items:center;gap:16px;padding:12px 24px;max-width:1100px;margin:0 auto}
+.brand{color:var(--primary);font-weight:800;font-size:20px;text-decoration:none}
+.link{color:#374151;text-decoration:none}
+.link:hover{color:var(--primary)}
+
+/* Componentes */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--primary); color:#fff; border:0; border-radius:12px;
+  padding:10px 16px; font-weight:600; cursor:pointer; transition: .15s ease;
+}
+.btn:hover{opacity:.9}
+.btn-outline{
+  background:#fff; color:var(--primary); border:2px solid var(--primary);
+}
+.input, select, textarea{
+  width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none;
+  background:#fff; color:var(--ink);
+}
+.input:focus, select:focus, textarea:focus{
+  box-shadow:0 0 0 3px rgba(46,125,50,.15);
+  border-color:#cbd5e1;
+}
+.badge{display:inline-block; background:var(--accent); color:#0f5132; border-radius:999px; padding:4px 10px; font-size:12px}
+
+/* Tarjetas de productos */
+.product-card .thumb{height:140px; background:rgba(165,214,167,.35); border-radius:12px; margin-bottom:10px}
+.product-card h4{margin:0}
+.price{color:var(--primary); font-weight:800}
+
+/* Tabla simple */
+.table{width:100%; border-collapse:collapse; background:#fff; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow)}
+.table th, .table td{padding:10px 12px; text-align:left; border-bottom:1px solid #f1f5f9; font-size:14px}
+.table th{background:#fafafa; color:#111827}
+
+/* Responsive */
+@media (max-width: 900px){
+  .grid-2{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 640px){
+  .grid-3{grid-template-columns:1fr}
+  .nav .wrap{padding:12px}
+  .container{padding:16px}
+}
