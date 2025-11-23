@@ -45,11 +45,11 @@ export default function App(){
           <div style={{ fontSize: 14 }}>
             <div>
               <strong>Contacto:</strong>{' '}
-              <span>{/* agrega aquí el número de contacto */}</span>
+              <span>Contacto</span>
             </div>
             <div>
               <strong>Dirección:</strong>{' '}
-              <span>{/* agrega aquí la dirección */}</span>
+              <span>Direccion</span>
             </div>
           </div>
 
