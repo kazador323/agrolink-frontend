@@ -19,8 +19,20 @@ export default function Checkout() {
   const [productId, setProductId] = useState('')
   const [quantity, setQuantity] = useState(1)
 
-  // Carrito del pedido
   const [cartItems, setCartItems] = useState([])
+
+  const cartProducerId = useMemo(
+    () => (cartItems.length > 0 ? cartItems[0].producerId : null),
+    [cartItems]
+  )
+
+  const filteredProducts = useMemo(
+    () => {
+      if (!cartProducerId) return products
+      return products.filter(p => String(p.producerId) === String(cartProducerId))
+    },
+    [products, cartProducerId]
+  )
 
   const [method, setMethod] = useState('transferencia')
   const [cardType, setCardType] = useState('debito')
@@ -45,7 +57,9 @@ export default function Checkout() {
         } else {
           const data = await apiGet('/api/products?limit=50&page=1', token)
           if (!mounted) return
-          const items = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : [])
+          const items = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.items) ? data.items : [])
           setProducts(items)
           if (items.length) setProductId(items[0]._id)
         }
@@ -66,7 +80,6 @@ export default function Checkout() {
     [products, productId]
   )
 
-  // TOTAL del pedido = suma de todos los items del carrito
   const total = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   }, [cartItems])
@@ -75,6 +88,14 @@ export default function Checkout() {
     if (!selected) return 'Selecciona un producto'
     const q = Number(quantity)
     if (Number.isNaN(q) || q <= 0) return 'Cantidad inválida'
+
+    if (cartItems.length > 0) {
+      const currentProducer = cartItems[0].producerId
+      if (String(selected.producerId) !== String(currentProducer)) {
+        return 'No puedes agregar productos de distintos productores en el mismo pedido.'
+      }
+    }
+
     return null
   }
 
@@ -94,7 +115,6 @@ export default function Checkout() {
     return null
   }
 
-  // Agregar producto actual al carrito
   function addItemToCart() {
     const err = validateBeforeAdd()
     if (err) return alert(err)
@@ -111,7 +131,6 @@ export default function Checkout() {
     setCartItems(prev => {
       const existing = prev.find(i => i.productId === item.productId)
 
-      // Si ya existe el producto en el carrito, solo sumamos cantidad
       if (existing) {
         return prev.map(i =>
           i.productId === item.productId
@@ -120,15 +139,12 @@ export default function Checkout() {
         )
       }
 
-      // Si es nuevo, lo agregamos
       return [...prev, item]
     })
 
-    // Resetear cantidad a 1
     setQuantity(1)
   }
 
-  //  Quitar un producto del carrito
   function removeFromCart(id) {
     setCartItems(prev => prev.filter(i => i.productId !== id))
   }
@@ -140,7 +156,6 @@ export default function Checkout() {
     try {
       setBusy(true); setStatusMsg('')
 
-      // Tomamos el productor del primer item (todos deberían ser del mismo productor)
       const producerId = cartItems[0].producerId
 
       const body = {
@@ -160,13 +175,16 @@ export default function Checkout() {
       if (method === 'tarjeta') {
         const cardErr = validateCard()
         if (cardErr) { setBusy(false); return alert(cardErr) }
-        await apiPost('/api/payments', { orderId: o._id, amount: total, method: `tarjeta-${cardType}` }, token)
+        await apiPost(
+          '/api/payments',
+          { orderId: o._id, amount: total, method: `tarjeta-${cardType}` },
+          token
+        )
         setStatusMsg('Pedido creado y pago confirmado ✔')
       } else {
         setStatusMsg('Pedido creado: pendiente de pago/entrega ✔')
       }
 
-      // Limpiar carrito después de crear el pedido
       setCartItems([])
     } catch (e) {
       alert('Error en Checkout: ' + (e?.message || 'desconocido'))
@@ -192,12 +210,18 @@ export default function Checkout() {
           value={productId}
           onChange={e => setProductId(e.target.value)}
         >
-          {products.map(p => (
+          {filteredProducts.map(p => (
             <option key={p._id} value={p._id}>
               {p.name} — ${p.price}{p.stock !== undefined ? ` (stock ${p.stock})` : ''}
             </option>
           ))}
         </select>
+
+        {cartProducerId && (
+          <p style={{ marginTop: 4, fontSize: 13, color: '#b71c1c' }}>
+            Solo puedes agregar productos del mismo productor en un pedido. Se muestran solo productos de ese productor.
+          </p>
+        )}
 
         <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
           <div>
@@ -212,7 +236,11 @@ export default function Checkout() {
           </div>
           <div>
             <label>Precio unitario</label>
-            <input className="input" value={selected ? `$${selected.price}` : '-'} disabled />
+            <input
+              className="input"
+              value={selected ? `$${selected.price}` : '-'}
+              disabled
+            />
           </div>
         </div>
 
@@ -228,8 +256,14 @@ export default function Checkout() {
 
         <div className="card" style={{ marginTop: 16, background: '#fafafa' }}>
           <h3 style={{ marginTop: 0 }}>Método de pago</h3>
-          <select className="input" value={method} onChange={e => setMethod(e.target.value)}>
-            {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          <select
+            className="input"
+            value={method}
+            onChange={e => setMethod(e.target.value)}
+          >
+            {PAYMENT_METHODS.map(m => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
           </select>
 
           {method === 'tarjeta' && (
@@ -237,22 +271,41 @@ export default function Checkout() {
               <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label>Tipo</label>
-                  <select className="input" value={cardType} onChange={e => setCardType(e.target.value)}>
+                  <select
+                    className="input"
+                    value={cardType}
+                    onChange={e => setCardType(e.target.value)}
+                  >
                     <option value="debito">Débito</option>
                     <option value="credito">Crédito</option>
                   </select>
                 </div>
                 <div>
                   <label>Número de tarjeta</label>
-                  <input className="input" placeholder="4111 1111 1111 1111" value={cardNumber} onChange={e => setCardNumber(e.target.value)} />
+                  <input
+                    className="input"
+                    placeholder="4111 1111 1111 1111"
+                    value={cardNumber}
+                    onChange={e => setCardNumber(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label>Vencimiento (MM/YY)</label>
-                  <input className="input" placeholder="MM/YY" value={cardExp} onChange={e => setCardExp(e.target.value)} />
+                  <input
+                    className="input"
+                    placeholder="MM/YY"
+                    value={cardExp}
+                    onChange={e => setCardExp(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label>CVV</label>
-                  <input className="input" placeholder="123" value={cardCVV} onChange={e => setCardCVV(e.target.value)} />
+                  <input
+                    className="input"
+                    placeholder="123"
+                    value={cardCVV}
+                    onChange={e => setCardCVV(e.target.value)}
+                  />
                 </div>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 8 }}>
@@ -272,69 +325,79 @@ export default function Checkout() {
           </button>
         </div>
 
-        {statusMsg && <div className="badge" style={{ display: 'inline-block', marginTop: 10 }}>{statusMsg}</div>}
+        {statusMsg && (
+          <div className="badge" style={{ display: 'inline-block', marginTop: 10 }}>
+            {statusMsg}
+          </div>
+        )}
       </section>
 
       <aside className="card">
-  <h3>Resumen</h3>
-  <div>Pedido: {orderId || '-'}</div>
+        <h3>Resumen</h3>
+        <div>Pedido: {orderId || '-'}</div>
 
-  {orderId && (
-    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <button
-        type="button"
-        className="btn btn-small"
-        onClick={() => navigate('/orders')}>
-        Ver Mis pedidos
-      </button>
-
-      <button
-        type="button"
-        className="btn btn-secondary btn-small"
-        onClick={() => {
-          setCartItems([])
-          setOrderId('')
-          setStatusMsg('')
-        }}>
-        Comprar más
-      </button>
-    </div>
-  )}
-
-  <div style={{ marginTop: 8 }}>
-    {cartItems.length === 0 ? (
-      <div>No hay productos en el pedido.</div>
-    ) : (
-      <>
-        <h4>Productos en este pedido</h4>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {cartItems.map(item => (
-            <li
-              key={item.productId}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}
+        {orderId && (
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-small"
+              onClick={() => navigate('/orders')}
             >
-              <span>
-                {item.name} x {item.quantity} — ${item.price * item.quantity}
-              </span>
-              <button
-                type="button"
-                className="btn btn-small"
-                onClick={() => removeFromCart(item.productId)}>
-                Quitar
-              </button>
-            </li>
-          ))}
-        </ul>
-      </>
-    )}
-  </div>
+              Ver Mis pedidos
+            </button>
 
-  <div style={{ marginTop: 12 }} className="price">
-    Total: ${total}
-  </div>
-</aside>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => {
+                setCartItems([])
+                setOrderId('')
+                setStatusMsg('')
+              }}
+            >
+              Comprar más
+            </button>
+          </div>
+        )}
 
+        <div style={{ marginTop: 8 }}>
+          {cartItems.length === 0 ? (
+            <div>No hay productos en el pedido.</div>
+          ) : (
+            <>
+              <h4>Productos en este pedido</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {cartItems.map(item => (
+                  <li
+                    key={item.productId}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '4px 0',
+                    }}
+                  >
+                    <span>
+                      {item.name} x {item.quantity} — ${item.price * item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-small"
+                      onClick={() => removeFromCart(item.productId)}
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
 
+        <div style={{ marginTop: 12 }} className="price">
+          Total: ${total}
+        </div>
+      </aside>
     </div>
   )
 }

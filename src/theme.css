@@ -25,6 +25,38 @@ body{
 }
 .hero{background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px}
 
+.app-root{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main{
+  flex: 1;
+}
+
+.footer{
+  border-top: 1px solid #e5e7eb;
+  border-bottom: none;
+}
+
+.footer-wrap{
+  padding-top: 12px;
+  padding-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-social{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 20px;
+}
+
 /* Tipografía */
 h1{font-size:clamp(28px,2.2vw,36px); margin:0 0 8px}
 h2{font-size:24px; margin:0 0 12px}

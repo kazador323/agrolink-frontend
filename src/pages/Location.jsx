@@ -1,10 +1,9 @@
-// src/pages/Location.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { apiGet, apiPut } from '../lib/api'
 import { REGIONES, COMUNAS_POR_REGION } from '../data/chile'
 
-const initial = { address:'', commune:'', region:'', latitude:'', longitude:'' }
+const initial = { address:'', comuna:'', region:'', latitude:'', longitude:'' }
 
 export default function LocationPage(){
   const { token } = useAuth()
@@ -27,7 +26,7 @@ export default function LocationPage(){
         if (doc) {
           setForm({
             address:   doc.address   || '',
-            commune:   doc.commune   || '',
+            comuna:   doc.comuna   || '',
             region:    doc.region    || '',
             latitude:  doc.latitude  ?? '',
             longitude: doc.longitude ?? '',
@@ -42,11 +41,10 @@ export default function LocationPage(){
 
   function onRegionChange(e){
     const region = e.target.value
-    // al cambiar región, si la comuna actual no pertenece, vacíala
     setForm(f => {
       const allowed = COMUNAS_POR_REGION[region] || []
-      const commune = allowed.includes(f.commune) ? f.commune : ''
-      return { ...f, region, commune }
+      const comuna = allowed.includes(f.comuna) ? f.comuna : ''
+      return { ...f, region, comuna }
     })
   }
 
@@ -62,14 +60,14 @@ export default function LocationPage(){
   }
 
   async function save(){
-    if (!form.address || !form.commune || !form.region) {
+    if (!form.address || !form.comuna || !form.region) {
       return alert('Dirección, Comuna y Región son obligatorios')
     }
     setSaving(true); setMsg('')
     try{
       const body = {
         address:   form.address.trim(),
-        commune:   form.commune.trim(),
+        comuna:   form.comuna.trim(),
         region:    form.region.trim(),
         latitude:  form.latitude === ''  ? undefined : Number(form.latitude),
         longitude: form.longitude === '' ? undefined : Number(form.longitude),
@@ -109,8 +107,8 @@ export default function LocationPage(){
             <label>Comuna *</label>
             <select
               className="input"
-              name="commune"
-              value={form.commune}
+              name="comuna"
+              value={form.comuna}
               onChange={onChange}
               disabled={!form.region}
             >

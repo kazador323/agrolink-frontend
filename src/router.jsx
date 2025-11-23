@@ -9,6 +9,7 @@ import Rate from './pages/Rate'
 import ProtectedRoute from './components/ProtectedRoute'
 import LocationPage from './pages/Location'
 import Profile from './pages/Profile'
+import OrdersHistory from './pages/OrdersHistory'
 
 export default function Router(){
   return (
@@ -16,22 +17,20 @@ export default function Router(){
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/catalog" element={<Catalog />} />
-      <Route path="/checkout" element={
-        <ProtectedRoute roles={['consumer']}><Checkout/></ProtectedRoute>
-      }/>
-      <Route path="/orders" element={
-        <ProtectedRoute roles={['consumer','producer']}><Orders/></ProtectedRoute>
-      }/>
-      <Route path="/producer" element={
-  <ProtectedRoute roles={['producer']}><Producer/></ProtectedRoute>
-}/>
-      <Route path="/rate/:orderId" element={
-        <ProtectedRoute roles={['consumer']}><Rate/></ProtectedRoute>
-      }/>
-      <Route path="/location" element={
-  <ProtectedRoute roles={['consumer','producer','admin']}><LocationPage/></ProtectedRoute>
-}/>
-<Route path="/me" element={<ProtectedRoute roles={['consumer','producer','admin']}><Profile/></ProtectedRoute>} />
+      <Route path="/checkout" element={<ProtectedRoute roles={['consumer']}><Checkout/></ProtectedRoute>}/>
+      <Route path="/orders" element={<ProtectedRoute roles={['consumer','producer']}><Orders/></ProtectedRoute>}/>
+      <Route path="/producer" element={<ProtectedRoute roles={['producer']}><Producer/></ProtectedRoute>}/>
+      <Route path="/rate/:orderId" element={<ProtectedRoute roles={['consumer']}><Rate/></ProtectedRoute>}/>
+      <Route path="/location" element={<ProtectedRoute roles={['consumer','producer','admin']}><LocationPage/></ProtectedRoute>}/>
+      <Route path="/me" element={<ProtectedRoute roles={['consumer','producer','admin']}><Profile/></ProtectedRoute>}/>
+      <Route
+        path="/orders/history"
+        element={
+          <ProtectedRoute roles={['producer']}>
+            <OrdersHistory />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }

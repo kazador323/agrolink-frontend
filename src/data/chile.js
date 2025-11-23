@@ -1,5 +1,3 @@
-// src/data/chile.js
-
 export const REGIONES = [
   "Arica y Parinacota",
   "Tarapacá",
@@ -20,7 +18,6 @@ export const REGIONES = [
 ]
 
 // Comunas representativas por región (funciona ya).
-// Si quieres TODAS las comunas, completa cada arreglo siguiendo este mismo formato.
 export const COMUNAS_POR_REGION = {
   "Arica y Parinacota": [
     "Arica", "Camarones", "Putre", "General Lagos"

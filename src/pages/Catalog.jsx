@@ -27,7 +27,7 @@ export default function Catalog(){
 
   // paginación
   const [page, setPage]             = useState(1)
-  const [pageSize, setPageSize]     = useState(9)   // opcional: ofrecer menú 9/12/24
+  const [pageSize, setPageSize]     = useState(9)
   const [total, setTotal]           = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
@@ -39,7 +39,6 @@ export default function Catalog(){
     [regionFilter]
   )
 
-  // 1) mi ubicación (preselecciona región/comuna si aplica)
   useEffect(()=>{
     apiGet('/api/location/my', token)
       .then(doc => {
@@ -52,17 +51,16 @@ export default function Catalog(){
         }
       })
       .catch(()=>{})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
-  // 2) categorías
+  // categorías
   useEffect(()=>{
     apiGet('/api/products/categories')
       .then(setCategories)
       .catch(()=> setCategories([]))
   },[])
 
-  // 3) cargar productos con filtros + paginación
+  // cargar productos con filtros + paginación
   useEffect(()=>{
     const params = new URLSearchParams()
     if (regionFilter)  params.set('region', regionFilter)
@@ -80,7 +78,7 @@ export default function Catalog(){
       .catch(console.error)
   }, [regionFilter, communeFilter, category, page, pageSize])
 
-  // 4) prioridad y distancia (sobre el resultado ya paginado)
+  // prioridad y distancia
   const enhanced = useMemo(()=>{
     const region = myLoc?.region
     const commune = myLoc?.commune
@@ -100,7 +98,6 @@ export default function Catalog(){
       return { ...p, _priority: priority, _distanceKm: distanceKm }
     })
 
-    // ordena dentro de la página actual
     return list.sort((a,b)=>{
       if (a._priority !== b._priority) return a._priority - b._priority
       if (a._distanceKm != null && b._distanceKm != null) return a._distanceKm - b._distanceKm
@@ -130,7 +127,6 @@ export default function Catalog(){
     <div className="container">
       <h2>Catálogo</h2>
 
-      {/* Filtros */}
       <div className="card" style={{marginBottom:16}}>
         <div style={{display:'grid', gap:12, gridTemplateColumns:'repeat(3, minmax(220px, 1fr))'}}>
           <div>
@@ -173,7 +169,6 @@ export default function Catalog(){
         </div>
       </div>
 
-      {/* Grilla */}
       <div className="grid grid-3">
         {enhanced.map(p=>(
           <div key={p._id} className="card product-card">
@@ -193,7 +188,6 @@ export default function Catalog(){
                 </span>
               )}
             </div>
-            {/* Teléfono productor */}
 {p.producerPublic?.phone && (
   <div style={{marginTop:8, display:'flex', alignItems:'center', gap:8}}>
     <a className="link" href={normalizePhoneToWhatsApp(p.producerPublic.phone)} target="_blank" rel="noreferrer">
@@ -210,7 +204,6 @@ export default function Catalog(){
         ))}
       </div>
 
-      {/* Paginación */}
       <div className="card" style={{marginTop:16, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div style={{color:'var(--muted)'}}>
           {total} resultado{total===1?'':'s'} — página {page} de {totalPages}
