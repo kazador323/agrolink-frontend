@@ -3,6 +3,7 @@ import { apiGet } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { REGIONES, COMUNAS_POR_REGION } from '../data/chile'
 import { normalizePhoneToWhatsApp } from '../lib/phone'
+import { Link } from 'react-router-dom'
 
 function haversine(lat1, lon1, lat2, lon2) {
   const toRad = d => d * Math.PI / 180
@@ -227,9 +228,7 @@ export default function Catalog(){
                   </div>
                 )}
 
-            <a className="btn" style={{marginTop:8, textDecoration:'none'}} href={`/checkout?product=${p._id}`}>
-              Comprar
-            </a>
+            <Link className="btn" style={{ marginTop: 8, textDecoration: 'none' }} to={`/checkout?product=${p._id}`}>Comprar</Link>
           </div>
         ))}
       </div>
