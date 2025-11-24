@@ -52,7 +52,7 @@ export default function OrdersHistory() {
     const setC = new Set()
     orders.forEach(o => {
       const loc = o.consumerLocation || {}
-      const com = loc.comuna || loc.commune
+      const com = loc.comuna || loc.comuna
       if (com) setC.add(com)
     })
     return Array.from(setC)
@@ -74,7 +74,7 @@ export default function OrdersHistory() {
 
       const loc = o.consumerLocation || {}
       const reg = loc.region || ''
-      const com = loc.comuna || loc.commune || ''
+      const com = loc.comuna || loc.comuna || ''
 
       if (region && reg !== region) return false
       if (comuna && com !== comuna) return false
@@ -223,7 +223,7 @@ export default function OrdersHistory() {
                 const user = o.consumerId || {}
                 const loc = o.consumerLocation || {}
                 const reg = loc.region || '-'
-                const com = loc.comuna || loc.commune || '-'
+                const com = loc.comuna || loc.comuna || '-'
 
                 return (
                   <tr key={o._id}>

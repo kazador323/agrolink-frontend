@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { apiGet, apiPut } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { normalizePhoneToWhatsApp } from '../lib/phone'
+import { Link } from 'react-router-dom'
 
 function StatusBadge({ status }) {
   let cls = 'badge-status '
@@ -191,6 +192,11 @@ export default function Orders() {
                               >
                                 {updatingId === o._id ? 'Procesando…' : 'Cancelar'}
                               </button>
+                            )}
+                            {role === 'consumer' && status === 'delivered' && (
+                              <Link className="btn btn-outline" to={`/rate/${o._id}`}>
+                                Evaluar
+                              </Link>
                             )}
 
                             {role === 'producer' && (

@@ -30,6 +30,7 @@ export default function Catalog(){
   const [pageSize, setPageSize]     = useState(9)
   const [total, setTotal]           = useState(0)
   const [totalPages, setTotalPages] = useState(1)
+  const [ratingsByProducer, setRatingsByProducer] = useState({})
 
   // datos
   const [products, setProducts] = useState([])
@@ -44,10 +45,10 @@ export default function Catalog(){
       .then(doc => {
         if (doc) {
           setMyLoc(doc)
-          if (!regionFilter) setRegionFilter(doc.region || '')
-          if (!communeFilter && doc.region && COMUNAS_POR_REGION[doc.region]?.includes(doc.commune)) {
-            setCommuneFilter(doc.commune)
-          }
+          /*if (!regionFilter) setRegionFilter(doc.region || '')
+          if (!communeFilter && doc.region && COMUNAS_POR_REGION[doc.region]?.includes(doc.comuna)) {
+            setCommuneFilter(doc.comuna)
+          }*/
         }
       })
       .catch(()=>{})
@@ -78,10 +79,33 @@ export default function Catalog(){
       .catch(console.error)
   }, [regionFilter, communeFilter, category, page, pageSize])
 
+  useEffect(() => {
+  if (!products || products.length === 0) return
+
+  // IDs únicos de productores
+  const uniqueProducerIds = [
+    ...new Set(products.map(p => p.producerId).filter(Boolean))
+  ]
+
+  uniqueProducerIds.forEach(id => {
+    if (ratingsByProducer[id]) return
+
+    apiGet(`/api/ratings/producer/${id}`, token)
+      .then(data => {
+        setRatingsByProducer(prev => ({
+          ...prev,
+          [id]: data || { avgScore: null, count: 0 }
+        }))
+      })
+      .catch(() => {
+      })
+  })
+}, [products, ratingsByProducer, token])
+
   // prioridad y distancia
   const enhanced = useMemo(()=>{
     const region = myLoc?.region
-    const commune = myLoc?.commune
+    const comuna = myLoc?.comuna
     const lat = myLoc?.latitude
     const lon = myLoc?.longitude
 
@@ -89,7 +113,7 @@ export default function Catalog(){
       const loc = p.producerLocation || {}
       let priority = 3
       if (region && loc.region === region) priority = 2
-      if (commune && loc.commune === commune) priority = 1
+      if (comuna && loc.comuna === comuna) priority = 1
 
       let distanceKm = null
       if (lat != null && lon != null && loc.latitude != null && loc.longitude != null) {
@@ -161,7 +185,7 @@ export default function Catalog(){
 
         <div style={{marginTop:12, display:'flex', gap:10, alignItems:'center', flexWrap:'wrap'}}>
           {myLoc && (
-            <div className="badge">Mi ubicación: {myLoc.commune || '-'}, {myLoc.region || '-'}</div>
+            <div className="badge">Mi ubicación: {myLoc.comuna || '-'}, {myLoc.region || '-'}</div>
           )}
           {(regionFilter || communeFilter || category) && (
             <button className="btn btn-outline" onClick={clearFilters}>Limpiar filtros</button>
@@ -177,10 +201,16 @@ export default function Catalog(){
               : <div className="thumb"/>}
             <h4>{p.name}</h4>
             <div className="price">${p.price}</div>
+            {ratingsByProducer[p.producerId] && ratingsByProducer[p.producerId].avgScore != null && (
+              <div style={{ marginTop: 4, fontSize: 13, color: 'var(--muted)' }}>
+                ⭐ {ratingsByProducer[p.producerId].avgScore.toFixed(1)} (
+                {ratingsByProducer[p.producerId].count} opiniones)
+              </div>
+            )}
 
             <div style={{marginTop:6, color:'var(--muted)', fontSize:13}}>
               {p.producerLocation
-                ? <span>{p.producerLocation.commune || '-'}, {p.producerLocation.region || '-'}</span>
+                ? <span>{p.producerLocation.comuna || '-'}, {p.producerLocation.region || '-'}</span>
                 : <span>Ubicación no disponible</span>}
               {p._distanceKm != null && (
                 <span className="badge" style={{marginLeft:8}}>
@@ -188,14 +218,14 @@ export default function Catalog(){
                 </span>
               )}
             </div>
-{p.producerPublic?.phone && (
-  <div style={{marginTop:8, display:'flex', alignItems:'center', gap:8}}>
-    <a className="link" href={normalizePhoneToWhatsApp(p.producerPublic.phone)} target="_blank" rel="noreferrer">
-      <span aria-label="WhatsApp" title="Contactar por WhatsApp" style={{fontSize:18}}>📞</span>
-      <span style={{marginLeft:6}}>{p.producerPublic.phone}</span>
-    </a>
-  </div>
-)}
+                {p.producerPublic?.phone && (
+                  <div style={{marginTop:8, display:'flex', alignItems:'center', gap:8}}>
+                    <a className="link" href={normalizePhoneToWhatsApp(p.producerPublic.phone)} target="_blank" rel="noreferrer">
+                      <span aria-label="WhatsApp" title="Contactar por WhatsApp" style={{fontSize:18}}>📞</span>
+                      <span style={{marginLeft:6}}>{p.producerPublic.phone}</span>
+                    </a>
+                  </div>
+                )}
 
             <a className="btn" style={{marginTop:8, textDecoration:'none'}} href={`/checkout?product=${p._id}`}>
               Comprar
